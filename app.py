@@ -7,9 +7,7 @@ from openai import OpenAI
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # Function to fetch the RSS feed using requests and parse it with feedparser
-def fetch_rss_articles():
-    rss_url = "https://www.biziday.ro/feed/"
-    
+def fetch_rss_articles(rss_url):
     try:
         response = requests.get(rss_url)
         response.raise_for_status()
@@ -38,13 +36,22 @@ def translate_text(text, level):
         return f"Eroare: {str(e)}"
 
 # Streamlit app setup
-st.title("Aplicație de Traducere a Știrilor")
+st.title("Aplicație de exersat germana cu știri din România")
 
-# Updated level selector with new options
+# Source selector
+source = st.radio("Selectați Sursa de Știri", options=['Biziday', 'Profit.ro'], index=0, horizontal=True)
+
+# Dictionary to map source names to URLs
+source_urls = {
+    'Biziday': "https://www.biziday.ro/feed/",
+    'Profit.ro': "https://www.profit.ro/rss"
+}
+
+# Level selector
 level = st.radio("Selectați Nivelul de Traducere", options=['Începător', 'Intermediar', 'Avansat'], index=0, horizontal=True, help="Vă rugăm să selectați un nivel de traducere.")
 
-# Fetch articles from the RSS feed
-articles = fetch_rss_articles()
+# Fetch articles from the selected RSS feed
+articles = fetch_rss_articles(source_urls[source])
 
 # Show total number of articles and the current article index
 total_articles = len(articles)
