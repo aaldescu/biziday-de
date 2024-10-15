@@ -40,8 +40,8 @@ def translate_text(text, level):
 # Streamlit app setup
 st.title("Aplicație de Traducere a Știrilor")
 
-# Move level selector to the top
-level = st.radio("Selectați Nivelul de Traducere", options=['A', 'B', 'C'], index=0, horizontal=True, help="Vă rugăm să selectați un nivel de traducere.")
+# Updated level selector with new options
+level = st.radio("Selectați Nivelul de Traducere", options=['Începător', 'Intermediar', 'Avansat'], index=0, horizontal=True, help="Vă rugăm să selectați un nivel de traducere.")
 
 # Fetch articles from the RSS feed
 articles = fetch_rss_articles()
@@ -79,7 +79,7 @@ else:
 
     # Translate title and description
     if st.button("Traducere"):
-        st.subheader(f"Articol Tradus (Nivel {level})")
+        st.subheader(f"Articol Tradus (Nivel: {level})")
 
         # Translated title
         translated_title = translate_text(original_title, level)
