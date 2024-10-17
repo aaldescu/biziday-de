@@ -84,7 +84,7 @@ def main():
                 st.success("Autentificat ca {}".format(username))
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.experimental_rerun()
+                st.success("Autentificat cu succes!")
             else:
                 st.warning("Autentificare eșuată")
 
