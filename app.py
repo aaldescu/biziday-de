@@ -6,10 +6,18 @@ import hashlib
 import sqlite3
 import json
 from streamlit_cookies_manager import EncryptedCookieManager
+from pydantic import BaseModel
+
 
 # Initialize OpenAI client
-# Initialize OpenAI client
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+# The structured output for use in OpenAI
+class LangTranslation(BaseModel):
+    tranlation: str
+    difficult_words : str
+    grammar_explanation: str
+    
 
 # Initialize connection to SQLite database
 def init_db():
@@ -75,20 +83,17 @@ def translate_text(text, level):
     
     try:
         # Using OpenAI client with gpt-4o-mini model to create chat completion
-        completion = client.chat.completions.create(
+        completion = client.beta.chat.completions.parse(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Esti un profesor de germana care vrea sa ma invete germana."},
                 {"role": "user", "content": prompt}
             ],
-            structured_outputs=[
-                {"name": "translation", "type": "text"},
-                {"name": "difficult_words", "type": "text"},
-                {"name": "grammar_explanation", "type": "text"}
-            ]
+            response_format=LangTranslation
         )
+ 
         # Access the translated content properly
-        response = completion.choices[0].message.content.strip()
+        response = completion.choices[0].message.parsed
         try:
             response_json = json.loads(response)
             return response_json
@@ -196,8 +201,8 @@ def main():
                 st.write(f"**Titlu Tradus:** {translated_title}")
 
                 # Translated description
-                translated_description = translate_text(original_description, level)
-                st.write(f"**Descriere Tradusă:** {translated_description}")
+                #translated_description = translate_text(original_description, level)
+                #st.write(f"**Descriere Tradusă:** {translated_description}")
 
                 # Option to display original article parts
                 show_original = st.sidebar.checkbox("Afișează articolul original")
