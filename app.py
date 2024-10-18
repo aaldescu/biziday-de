@@ -4,6 +4,7 @@ import feedparser
 from openai import OpenAI
 import hashlib
 import sqlite3
+import json
 from streamlit_cookies_manager import EncryptedCookieManager
 
 # Initialize OpenAI client
@@ -79,11 +80,21 @@ def translate_text(text, level):
             messages=[
                 {"role": "system", "content": "Esti un profesor de germana care vrea sa ma invete germana."},
                 {"role": "user", "content": prompt}
+            ],
+            structured_outputs=[
+                {"name": "translation", "type": "text"},
+                {"name": "difficult_words", "type": "text"},
+                {"name": "grammar_explanation", "type": "text"}
             ]
         )
         # Access the translated content properly
-        translated_text = completion.choices[0].message.content.strip()
-        return translated_text
+        response = completion.choices[0].message.content.strip()
+        try:
+            response_json = json.loads(response)
+            return response_json
+        except json.JSONDecodeError:
+            st.error("Eroare: Raspunsul de la OpenAI nu este un JSON valid.")
+            return ""
     except Exception as e:
         st.error(f"Eroare: {str(e)}")
         return ""
