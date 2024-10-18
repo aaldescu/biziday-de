@@ -70,7 +70,7 @@ def fetch_rss_articles(rss_url):
         return []
 
 def translate_text(text, level):
-    prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}"
+    prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}. Te rog sa raspunzi cu un JSON care contine urmatoarele informatii: 'translation' (traducerea textului), 'difficult_words' (cuvinte dificile din text), si 'grammar_explanation' (explicatii gramaticale pentru text)"
     
     try:
         # Using OpenAI client with gpt-4o-mini model to create chat completion
@@ -178,7 +178,7 @@ def main():
 
             # Translate button in sidebar
             if st.sidebar.button("Traducere"):
-                st.subheader(f"Articol Tradus (Nivel: {level})")
+                st.subheader(f"Traducere (Nivel: {level})")
 
                 # Translated title
                 translated_title = translate_text(original_title, level)
