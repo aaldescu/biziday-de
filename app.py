@@ -1,13 +1,14 @@
 import streamlit as st
 import requests
 import feedparser
-import openai
+from openai import OpenAI
 import hashlib
 import sqlite3
 from streamlit_cookies_manager import EncryptedCookieManager
 
 # Initialize OpenAI client
-openai.api_key = st.secrets["openai"]["api_key"]
+# Initialize OpenAI client
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # Initialize connection to SQLite database
 def init_db():
@@ -70,16 +71,18 @@ def fetch_rss_articles(rss_url):
 
 def translate_text(text, level):
     prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}"
-
+    
     try:
-        completion = openai.ChatCompletion.create(
+        # Using OpenAI client with gpt-4o-mini model to create chat completion
+        completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Esti un profesor de germana care vrea sa ma invete germana."},
                 {"role": "user", "content": prompt}
             ]
         )
-        translated_text = completion.choices[0].message['content'].strip()
+        # Access the translated content properly
+        translated_text = completion.choices[0].message.content.strip()
         return translated_text
     except Exception as e:
         st.error(f"Eroare: {str(e)}")
