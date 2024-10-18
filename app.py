@@ -105,7 +105,6 @@ def main():
         if st.sidebar.button("Autentificare"):
             if login_user(username, password):
                 st.success(f"Autentificat ca {username}")
-                st.experimental_rerun()
             else:
                 st.warning("Autentificare eșuată")
 
