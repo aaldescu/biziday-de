@@ -90,7 +90,7 @@ def translate_text(text, level):
 
 # Main App
 def main():
-    st.title("Aplicație de exersat germana cu știri din România")
+    st.title("Exerseazǎ germanǎ citind ştiri din România")
 
     menu = ["Acasă", "Autentificare", "Înregistrare"]
     choice = st.sidebar.selectbox("Meniu", menu)
