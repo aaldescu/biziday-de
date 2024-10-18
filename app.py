@@ -23,12 +23,12 @@ c = conn.cursor()
 
 # Initialize Cookies Manager
 cookies = EncryptedCookieManager(
-    prefix="bisidei_",  # Replace with your preferred prefix
+    prefix="your_prefix_name",  # Replace with your preferred prefix
     password=st.secrets["cookies"]["password"],  # Replace with a strong password
 )
 
 if not cookies.ready():
-    st.stop()
+    st.stop()  # Stop the app if cookies manager is not ready
 
 # User Authentication Functions
 def make_hashes(password):
@@ -48,12 +48,13 @@ def login_user(username, password):
     c.execute('SELECT * FROM users WHERE username=?', (username,))
     data = c.fetchone()
     if data and check_hashes(password, data[1]):
-        cookies.set("username", username)
+        cookies['username'] = username  # Set the username in the cookies
+        cookies.save()  # Save the cookies
         return True
     return False
 
 def is_logged_in():
-    return cookies.get("username") is not None
+    return 'username' in cookies  # Check if the 'username' cookie exists
 
 # News Translation Functions
 def fetch_rss_articles(rss_url):
@@ -86,7 +87,6 @@ def translate_text(text, level):
 
 # Main App
 def main():
-    cookies.load()
     st.title("Aplicație de exersat germana cu știri din România")
 
     menu = ["Acasă", "Autentificare", "Înregistrare"]
@@ -104,7 +104,7 @@ def main():
 
         if st.sidebar.button("Autentificare"):
             if login_user(username, password):
-                cookies.save()
+                cookies.save()  # Save the cookies after logging in
                 st.success(f"Autentificat ca {username}")
                 st.experimental_rerun()
             else:
@@ -123,9 +123,9 @@ def main():
 
     # Main app logic (only accessible when logged in)
     if is_logged_in():
-        st.sidebar.success(f"Autentificat ca: {cookies.get('username')}")
+        st.sidebar.success(f"Autentificat ca: {cookies['username']}")
         if st.sidebar.button("Deconectare"):
-            cookies.delete("username")
+            del cookies['username']  # Delete the 'username' cookie
             cookies.save()
             st.experimental_rerun()
 
