@@ -1,38 +1,59 @@
 import streamlit as st
 import requests
 import feedparser
-from openai import OpenAI
+import openai
 import hashlib
 import sqlite3
+from streamlit_cookies_manager import EncryptedCookieManager
 
-# Initialize the OpenAI client using the key from Streamlit secrets
-client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+# Initialize OpenAI client
+openai.api_key = st.secrets["openai"]["api_key"]
 
 # Initialize connection to SQLite database
-conn = sqlite3.connect('user_db.sqlite')
+def init_db():
+    conn = sqlite3.connect('user_db.sqlite')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS users
+                 (username TEXT PRIMARY KEY, password TEXT)''')
+    conn.commit()
+    return conn
+
+conn = init_db()
 c = conn.cursor()
 
-# Create users table if it doesn't exist
-c.execute('''CREATE TABLE IF NOT EXISTS users
-             (username TEXT PRIMARY KEY, password TEXT)''')
+# Initialize Cookies Manager
+cookies = EncryptedCookieManager(
+    prefix="your_prefix_name",  # Replace with your preferred prefix
+    password=st.secrets["cookies"]["password"],  # Replace with a strong password
+)
+
+if not cookies.ready():
+    st.stop()
 
 # User Authentication Functions
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
 def check_hashes(password, hashed_text):
-    if make_hashes(password) == hashed_text:
-        return hashed_text
-    return False
+    return make_hashes(password) == hashed_text
 
 def add_user(username, password):
-    c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, make_hashes(password)))
-    conn.commit()
+    try:
+        c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, make_hashes(password)))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        st.error("Utilizatorul există deja.")
 
 def login_user(username, password):
     c.execute('SELECT * FROM users WHERE username=?', (username,))
-    data = c.execute('SELECT * FROM users WHERE username =?', (username,)).fetchone()
-    return check_hashes(password, data[1]) if data else False
+    data = c.fetchone()
+    if data and check_hashes(password, data[1]):
+        cookies.set("username", username)
+        return True
+    return False
+
+def is_logged_in():
+    return cookies.get("username") is not None
 
 # News Translation Functions
 def fetch_rss_articles(rss_url):
@@ -50,20 +71,22 @@ def translate_text(text, level):
     prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}"
 
     try:
-        completion = client.chat.completions.create(
+        completion = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Esti un profesor de germana care vrea sa ma invete germana."},
                 {"role": "user", "content": prompt}
             ]
         )
-        translated_text = completion.choices[0].message.content.strip()
+        translated_text = completion.choices[0].message['content'].strip()
         return translated_text
     except Exception as e:
-        return f"Eroare: {str(e)}"
+        st.error(f"Eroare: {str(e)}")
+        return ""
 
 # Main App
 def main():
+    cookies.load()
     st.title("Aplicație de exersat germana cu știri din România")
 
     menu = ["Acasă", "Autentificare", "Înregistrare"]
@@ -81,10 +104,9 @@ def main():
 
         if st.sidebar.button("Autentificare"):
             if login_user(username, password):
-                st.success("Autentificat ca {}".format(username))
-                st.session_state['logged_in'] = True
-                st.session_state['username'] = username
-                st.success("Autentificat cu succes!")
+                cookies.save()
+                st.success(f"Autentificat ca {username}")
+                st.experimental_rerun()
             else:
                 st.warning("Autentificare eșuată")
 
@@ -100,10 +122,11 @@ def main():
             st.info("Mergeți la pagina de autentificare pentru a vă conecta")
 
     # Main app logic (only accessible when logged in)
-    if 'logged_in' in st.session_state and st.session_state['logged_in']:
-        st.sidebar.success("Autentificat ca: {}".format(st.session_state['username']))
+    if is_logged_in():
+        st.sidebar.success(f"Autentificat ca: {cookies.get('username')}")
         if st.sidebar.button("Deconectare"):
-            st.session_state['logged_in'] = False
+            cookies.delete("username")
+            cookies.save()
             st.experimental_rerun()
 
         # News Translation App Logic
@@ -164,7 +187,7 @@ def main():
                 translated_description = translate_text(original_description, level)
                 st.write(f"**Descriere Tradusă:** {translated_description}")
 
-                # Option to display original article in sidebar
+                # Option to display original article parts
                 show_original = st.sidebar.checkbox("Afișează articolul original")
                 if show_original:
                     st.subheader("Articol Original")
