@@ -23,7 +23,7 @@ c = conn.cursor()
 
 # Initialize Cookies Manager
 cookies = EncryptedCookieManager(
-    prefix="your_prefix_name",  # Replace with your preferred prefix
+    prefix="bisidei_",  # Replace with your preferred prefix
     password=st.secrets["cookies"]["password"],  # Replace with a strong password
 )
 
