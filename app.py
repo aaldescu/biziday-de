@@ -104,7 +104,6 @@ def main():
 
         if st.sidebar.button("Autentificare"):
             if login_user(username, password):
-                cookies.save()  # Save the cookies after logging in
                 st.success(f"Autentificat ca {username}")
                 st.experimental_rerun()
             else:
