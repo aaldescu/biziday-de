@@ -1,4 +1,4 @@
 requests
 feedparser
 openai
-streamlit_cookies_manager
+streamlit-cookies-manager
