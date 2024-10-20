@@ -79,7 +79,7 @@ def fetch_rss_articles(rss_url):
         return []
 
 def translate_text(text, level):
-    prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}. Te rog sa raspunzi cu urmatoarele informatii: 'translation' (traducerea textului), 'difficult_words' (cuvinte dificile din text), si 'grammar_explanation' (explicatii gramaticale pentru text)"
+    prompt = f"Esti un profesor de germana , tradu-mi si rescrie textul cu cuvinte adaptate pentru nivel de germana {level}: {text}. Te rog sa raspunzi cu urmatoarele informatii: 'translation' (traducerea textului), 'difficult_words' (cuvinte dificile din text cu traducerea in germana - romana, formatat Markdown), si 'grammar_explanation' (explicatii gramaticale in limba romana pentru textul tradus si formatat Markdown)"
     
     try:
         # Using OpenAI client with gpt-4o-mini model to create chat completion
@@ -94,9 +94,9 @@ def translate_text(text, level):
  
         # Access the translated content properly
         response = completion.choices[0].message.parsed
-        return response.final_answer
+        return response
     except Exception as e:
-        st.error(f"Eroare: {str(e)}")
+        st.error(f"Eroare [translate_text()]: {str(e)}")
         return ""
 
 # Main App
@@ -193,7 +193,10 @@ def main():
 
                 # Translated title
                 translated_title = translate_text(original_title, level)
-                st.write(f"**Titlu Tradus:** {translated_title}")
+                st.write(f"**Titlu Tradus:** {translated_title.tranlation}")
+
+                st.write(f"**Cuvinte:** {translated_title.difficult_words}")
+                st.write(f"**Gramatica:** {translated_title.grammar_explanation}")
 
                 # Translated description
                 #translated_description = translate_text(original_description, level)
